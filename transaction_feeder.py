@@ -32,20 +32,29 @@ def compute_transaction_signature(transaction, private_key):
 transactions: List[Transaction] = []
 private_key = PrivateKey()
 
-transaction = Transaction(tid=0, sender="", recipient="Alice", amount=100)
-transaction.signature = compute_transaction_signature(transaction, private_key.alice)
-transactions.append(transaction)
+# transaction = Transaction(tid=0, sender="", recipient="Alice", amount=100)
+# transaction.signature = compute_transaction_signature(transaction, private_key.alice)
+# transactions.append(transaction)
+#
+# transaction = Transaction(tid=1, sender="", recipient="Bob", amount=100)
+# transaction.signature = compute_transaction_signature(transaction, private_key.bob)
+# transactions.append(transaction)
+#
+# transaction = Transaction(tid=2, sender="", recipient="Charlie", amount=100)
+# transaction.signature = compute_transaction_signature(transaction, private_key.charlie)
+# transactions.append(transaction)
+#
+# transaction = Transaction(tid=3, sender="Charlie", recipient="Bob", amount=87)
+# transaction.signature = compute_transaction_signature(transaction, private_key.bob)
+# transactions.append(transaction)
 
-transaction = Transaction(tid=1, sender="", recipient="Bob", amount=100)
+
+transaction = Transaction(tid=3, sender="Charlie", recipient="Bob", amount=8998)
 transaction.signature = compute_transaction_signature(transaction, private_key.bob)
-transactions.append(transaction)
-
-transaction = Transaction(tid=2, sender="", recipient="Charlie", amount=100)
-transaction.signature = compute_transaction_signature(transaction, private_key.charlie)
 transactions.append(transaction)
 
 transaction = Transaction(tid=3, sender="Charlie", recipient="Bob", amount=87)
-transaction.signature = compute_transaction_signature(transaction, private_key.bob)
+transaction.signature = compute_transaction_signature(transaction, private_key.alice)
 transactions.append(transaction)
 
 publisher = gps.PublisherClient()

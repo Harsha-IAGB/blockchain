@@ -2,6 +2,7 @@ import logging
 import os
 import pickle
 import warnings
+from block import Block
 
 from google.cloud import pubsub_v1 as gps
 from urllib3.exceptions import NotOpenSSLWarning
@@ -47,6 +48,7 @@ class Participant:
 
     def block_add_callback(self, message):
         block = pickle.loads(message.data)
+        # print(1991, block.previous_hash, block.index, block.timestamp, block.transactions, block.proof)
         logging.info(f"\nProcessing new block: {block}")
         logging.info(f"Checking previous hash of the block...")
         if self.blockchain.last_block.hash == block.previous_hash:
