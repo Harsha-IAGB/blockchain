@@ -1,18 +1,14 @@
 import logging
+import os
 import pickle
-import time
+import warnings
 
+from google.cloud import pubsub_v1 as gps
 from urllib3.exceptions import NotOpenSSLWarning
 
-from block import Block
 from blockchain import Blockchain
 from constants import GPubSub
-from google.cloud import pubsub_v1 as gps
-import os
-
 from proof_of_work_calculator import ProofOfWorkCalculator
-from transaction import Transaction
-import warnings
 
 # Filter out the NotOpenSSLWarning
 warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
@@ -20,23 +16,6 @@ warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GPubSub.credentials_file
 
-
-# publisher = gps.PublisherClient()
-# ta_topic_path = "projects/nomadic-botany-422915-m7/topics/transaction-add"
-# ba_topic_path = "projects/nomadic-botany-422915-m7/topics/block-add"
-#
-# ta_data = Transaction(
-#     id="1",
-#     sender="Alice",
-#     recipient="Bob",
-#     amount=4
-# )
-# ba_data = "ba harsha is a good boy".encode()
-#
-# ta_future = publisher.publish(ta_topic_path, pickle.dumps(ta_data))
-# # ba_future = publisher.publish(ba_topic_path, ba_data)
-# print(ta_future.result())
-# # print(ba_future.result())
 
 class Participant:
     def __init__(self):
@@ -68,7 +47,6 @@ class Participant:
 
     def block_add_callback(self, message):
         block = pickle.loads(message.data)
-        print(1991, block.previous_hash, block.index, block.timestamp, block.transactions, block.proof)
         logging.info(f"\nProcessing new block: {block}")
         logging.info(f"Checking previous hash of the block...")
         if self.blockchain.last_block.hash == block.previous_hash:
@@ -87,4 +65,3 @@ class Participant:
 
 if __name__ == '__main__':
     participant = Participant()
-

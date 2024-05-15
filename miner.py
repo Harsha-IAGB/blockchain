@@ -1,28 +1,23 @@
-import copy
-import time
-from typing import List
-
-from block import Block
-from blockchain import Blockchain
-from concurrent.futures import TimeoutError
-from constants import GPubSub, BlockParameters
-from google.cloud import pubsub_v1 as gps
-from private_keys import PrivateKey
-from proof_of_work_calculator import ProofOfWorkCalculator
-from urllib3.exceptions import NotOpenSSLWarning
 import logging
 import os
 import pickle
-
-from transaction import Transaction
-
 import warnings
+from concurrent.futures import TimeoutError
+from typing import List
+
+from google.cloud import pubsub_v1 as gps
+from urllib3.exceptions import NotOpenSSLWarning
+
+from block import Block
+from blockchain import Blockchain
+from constants import GPubSub, BlockParameters
+from private_keys import PrivateKey
+from proof_of_work_calculator import ProofOfWorkCalculator
+from transaction import Transaction
 
 # Filter out the NotOpenSSLWarning
 warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
 
-
-# logging.basicConfig(filename='blockchain.log', level=logging.INFO)
 logging.basicConfig(level=logging.INFO)
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GPubSub.credentials_file
 
@@ -32,6 +27,7 @@ public_key = {
     "Bob": private_key.bob.public_key(),
     "Charlie": private_key.charlie.public_key(),
 }
+
 
 class Miner:
     def __init__(self):
@@ -74,7 +70,12 @@ class Miner:
                 self.topic["transaction-add"]["pull_future"].result()
                 self.topic["block-add"]["pull_future"].result()
 
-    def transaction_add_callback(self, message):
+    def transaction_add_callback(self, message) -> None:
+        """
+        receives a transaction and adds it to the list/chain.
+        :param message:
+        :return:
+        """
         transaction = pickle.loads(message.data)
         logging.info(f"\nProcessing new transaction: {transaction}")
         logging.info(f"Verifying recipient's digital signature for transaction: {transaction}")
@@ -106,7 +107,7 @@ class Miner:
                 block = Block(
                     index=len(self.blockchain.chain),
                     previous_hash=self.blockchain.last_block.hash,
-                    transactions = self.current_transactions
+                    transactions=self.current_transactions
                 )
                 block.proof = ProofOfWorkCalculator.calculate_proof_of_work(self.blockchain.last_block.proof,
                                                                             block.proof_bytes)
@@ -120,9 +121,13 @@ class Miner:
                             f" Discarding the transaction...")
         message.ack()
 
-    def block_add_callback(self, message):
+    def block_add_callback(self, message) -> None:
+        """
+
+        :param message: block data in bytes
+        :return:
+        """
         block = pickle.loads(message.data)
-        print(1991, block.previous_hash, block.index, block.timestamp, block.transactions, block.proof)
         logging.info(f"\nProcessing new block: {block}")
         logging.info(f"Checking previous hash of the block...")
         if self.blockchain.last_block.hash == block.previous_hash:
@@ -137,12 +142,6 @@ class Miner:
                         if bt.tid == ct.tid:
                             self.current_transactions.remove(ct)
                             break
-                # current_tids = set()
-                # for transaction in block.transactions:
-                #     current_tids.add(transaction.tid)
-                # for transaction in self.current_transactions:
-                #     if transaction.tid in current_tids:
-                #         self.current_transactions.remove(transaction)
                 logging.info(f"State of blockchain:\nblockchain:\n{self.blockchain}\n{self.blockchain.chain}")
             else:
                 logging.warning(f"Invalid proof of work for block: {block}")
@@ -150,55 +149,6 @@ class Miner:
             logging.warning(f"Invalid previous hash of block: {block}")
         message.ack()
 
-
-# subscriber = gps.SubscriberClient()
-# ta_subscription_path = "projects/nomadic-botany-422915-m7/subscriptions/transaction-add"
-# ba_subscription_path = "projects/nomadic-botany-422915-m7/subscriptions/block-add-sub"
-#
-#
-# def ta_callback(message):
-#     print(message.attributes)
-#     print(dir(message))
-#     # publisher = gps.PublisherClient()
-#     # ba_topic_path = "projects/nomadic-botany-422915-m7/topics/block-add"
-#     # ba_data = "baa harsha is a good boy".encode()
-#     # ba_future = publisher.publish(ba_topic_path, ba_data)
-#     # print(ba_future.result())
-#     message.ack()
-#
-#
-# ta_streaming_pull_future = subscriber.subscribe(ta_subscription_path, ta_callback)
-# ba_streaming_pull_future = subscriber.subscribe(ba_subscription_path, ta_callback)
-#
-# with subscriber:
-#     try:
-#         ta_streaming_pull_future.result()
-#         ba_streaming_pull_future.result()
-#     except TimeoutError:
-#         ta_streaming_pull_future.cancel()
-#         ta_streaming_pull_future.result()
-#         ba_streaming_pull_future.cancel()
-#         ba_streaming_pull_future.result()
-#
-# def subscribe_transaction_add(self):
-#     self.miner.subscribe("transaction/add")
-#     try:
-#         logging.info("in t/a loop")
-#         self.miner.loop_forever()
-#     except Exception as ex:
-#         logging.error(f"exception occurred:\n{ex}")
-#
-#
-# def subscribe_block_add(self):
-#     self.miner.subscribe("block/add")
-#     try:
-#         logging.info("in b/a loop")
-#         self.miner.loop_forever()
-#     except Exception as ex:
-#         logging.error(f"exception occurred:\n{ex}")
-#
-#
-# print("I am free")
 
 if __name__ == '__main__':
     miner = Miner()
